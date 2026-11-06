@@ -1,4 +1,3 @@
-
 package me.binarylife.mastaka;
 
 import android.os.Bundle;
@@ -26,11 +25,27 @@ public class NotesFragment extends Fragment {
     private RecyclerView rvNotes;
     private NotesAdapter notesAdapter;
     private List<Note> noteList;
-
     private FirebaseFirestore db;
+    private boolean isAiAssist = false;
 
     public NotesFragment() {
         // Required empty constructor
+    }
+
+    public static NotesFragment newInstance(boolean isAiAssist) {
+        NotesFragment fragment = new NotesFragment();
+        Bundle args = new Bundle();
+        args.putBoolean("is_ai_assist", isAiAssist);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            isAiAssist = getArguments().getBoolean("is_ai_assist", false);
+        }
     }
 
     @Nullable
@@ -105,14 +120,16 @@ public class NotesFragment extends Fragment {
                                         document.getBoolean("isAiSupported")
                                 );
 
-                        Note note = new Note(
-                                id,
-                                title != null ? title : "Untitled",
-                                description != null ? description : "",
-                                isAiSupported
-                        );
+                        if (isAiSupported == isAiAssist) {
+                            Note note = new Note(
+                                    id,
+                                    title != null ? title : "Untitled",
+                                    description != null ? description : "",
+                                    isAiSupported
+                            );
 
-                        noteList.add(note);
+                            noteList.add(note);
+                        }
                     }
 
                     notesAdapter.notifyDataSetChanged();

@@ -1,20 +1,19 @@
-
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:checkableBehavior="single">
 
         <item
-            android:id="@+id/nav_notes"
-            android:title="My Notes"
+            android:id="@+id/nav_personal_notes"
+            android:title="Personal Notes"
             android:checked="true" />
+
+        <item
+            android:id="@+id/nav_ai_notes"
+            android:title="AI Assist Notes" />
 
         <item
             android:id="@+id/nav_iot"
             android:title="IoT Devices" />
-
-        <item
-            android:id="@+id/nav_settings"
-            android:title="Settings" />
 
     </group>
 

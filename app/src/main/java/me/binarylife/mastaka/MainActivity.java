@@ -1,19 +1,13 @@
-
 package me.binarylife.mastaka;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.fragment.app.Fragment;
@@ -22,10 +16,6 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -58,10 +48,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Initial Page
         if (savedInstanceState == null) {
-            showPage("My Notes");
+            showPage("Personal Notes", false);
 
-            navigationView.setCheckedItem(R.id.nav_notes);
-            bottomNavigation.setSelectedItemId(R.id.nav_notes);
+            navigationView.setCheckedItem(R.id.nav_personal_notes);
+            bottomNavigation.setSelectedItemId(R.id.nav_personal_notes);
         }
 
         // Bottom Navigation
@@ -69,14 +59,14 @@ public class MainActivity extends AppCompatActivity {
 
             int id = item.getItemId();
 
-            if (id == R.id.nav_notes) {
-                showPage("My Notes");
-                navigationView.setCheckedItem(R.id.nav_notes);
+            if (id == R.id.nav_personal_notes) {
+                showPage("Personal Notes", false);
+                navigationView.setCheckedItem(R.id.nav_personal_notes);
                 return true;
 
-            } else if (id == R.id.nav_settings) {
-                showPage("Settings");
-                navigationView.setCheckedItem(R.id.nav_settings);
+            } else if (id == R.id.nav_ai_notes) {
+                showPage("AI Assist Notes", true);
+                navigationView.setCheckedItem(R.id.nav_ai_notes);
                 return true;
             }
 
@@ -88,13 +78,13 @@ public class MainActivity extends AppCompatActivity {
 
             int id = item.getItemId();
 
-            if (id == R.id.nav_notes) {
+            if (id == R.id.nav_personal_notes) {
 
-                bottomNavigation.setSelectedItemId(R.id.nav_notes);
+                bottomNavigation.setSelectedItemId(R.id.nav_personal_notes);
 
-            } else if (id == R.id.nav_settings) {
+            } else if (id == R.id.nav_ai_notes) {
 
-                bottomNavigation.setSelectedItemId(R.id.nav_settings);
+                bottomNavigation.setSelectedItemId(R.id.nav_ai_notes);
 
             } else if (id == R.id.nav_iot) {
 
@@ -162,58 +152,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Fragment Navigation
-    private void showPage(String title) {
+    private void showPage(String title, boolean isAiAssist) {
 
         toolbar.setTitle(title);
 
-        Fragment fragment;
-
-        if (title.equals("My Notes")) {
-            fragment = new NotesFragment();
-        } else {
-            fragment = new PageFragment();
-        }
+        Fragment fragment = NotesFragment.newInstance(isAiAssist);
 
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragmentContainer, fragment)
                 .commit();
-    }
-
-    // Temporary Page Fragment
-    public static class PageFragment extends Fragment {
-
-        public static PageFragment newInstance(String title) {
-
-            PageFragment fragment = new PageFragment();
-
-            Bundle args = new Bundle();
-            args.putString("title", title);
-
-            fragment.setArguments(args);
-
-            return fragment;
-        }
-
-        @Nullable
-        @Override
-        public View onCreateView(
-                @NonNull android.view.LayoutInflater inflater,
-                @Nullable ViewGroup container,
-                @Nullable Bundle savedInstanceState) {
-
-            TextView textView = new TextView(requireContext());
-
-            String title = getArguments() != null
-                    ? getArguments().getString("title")
-                    : "Mastake";
-
-            textView.setText(title);
-            textView.setTextSize(22);
-            textView.setTextColor(0xFF172554);
-            textView.setGravity(Gravity.CENTER);
-
-            return textView;
-        }
     }
 }

@@ -1,14 +1,13 @@
-
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/nav_notes"
+        android:id="@+id/nav_personal_notes"
         android:icon="@android:drawable/ic_menu_edit"
-        android:title="Notes" />
+        android:title="Personal Note" />
 
     <item
-        android:id="@+id/nav_settings"
-        android:icon="@android:drawable/ic_menu_preferences"
-        android:title="Settings" />
+        android:id="@+id/nav_ai_notes"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="AI Assist Note" />
 
 </menu>
