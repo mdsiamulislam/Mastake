@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "111443439971",
+    "project_id": "mastaka-82a9f",
+    "storage_bucket": "mastaka-82a9f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:111443439971:android:0b9fc28b78e12cb1f16356",
+        "android_client_info": {
+          "package_name": "me.binarylife.mastaka"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "111443439971-idg5irp5mgdfph15iq5po3fu9smbuhrh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "me.binarylife.mastaka",
+            "certificate_hash": "a9a9edf44d6eabc226cca943cdfde24b7be5161d"
+          }
+        },
+        {
+          "client_id": "111443439971-8n9gq08eu0e9q0jv55r5h00lmpi5it28.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCy4cyjtzrgjQ8dLrbLY3MhYXzahX13Qs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "111443439971-8n9gq08eu0e9q0jv55r5h00lmpi5it28.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

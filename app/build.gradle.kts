@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -41,10 +42,30 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
+
+    // Credentials & Google ID (Credential Manager for Firebase Auth)
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services.auth)
+    implementation(libs.googleid)
+
+    // UI Components
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
+
+    // Firebase BoM (সঠিক ভার্সন শুধু একবার থাকবে)
+    implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
+
+    // Firebase Products (BoM version কন্ট্রোল করবে তাই আলাদা ভার্সন লাগবে না)
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
+
+    // Firestore
+    implementation("com.google.firebase:firebase-firestore")
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation("com.google.android.material:material:1.12.0")
-    implementation("androidx.viewpager2:viewpager2:1.1.0")
-    implementation ("com.google.android.material:material:1.12.0")
 }
