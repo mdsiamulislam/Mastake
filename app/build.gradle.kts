@@ -4,9 +4,7 @@ plugins {
 
 android {
     namespace = "me.binarylife.mastaka"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "me.binarylife.mastaka"
