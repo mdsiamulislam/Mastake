@@ -1,6 +1,7 @@
 
 package me.binarylife.mastaka;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -117,9 +118,8 @@ public class MainActivity extends AppCompatActivity {
         // Floating Action Button
         fabAddNote.setOnClickListener(v -> {
 
-            Toast.makeText(this,
-                    "Create New Note",
-                    Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(MainActivity.this, NoteCreateActivity.class);
+            startActivity(intent);
 
         });
     }
