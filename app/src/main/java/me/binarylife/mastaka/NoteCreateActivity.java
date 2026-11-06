@@ -92,8 +92,7 @@ public class NoteCreateActivity extends AppCompatActivity {
                 Toast.LENGTH_SHORT
         ).show();
 
-        // Testing only. Never keep API keys inside a production APK.
-        String apiKey = "AQ.Ab8RN6LFPuHhqwWGYZm17u-s2QubuMp6ac09NaC58d7E0q9dnA";
+        String apiKey = "YOUR_API";
 
         new Thread(() -> {
 
