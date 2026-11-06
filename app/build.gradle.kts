@@ -67,6 +67,9 @@ dependencies {
     // Gemini SDK
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
+    // RecyclerView
+    implementation("androidx.recyclerview:recyclerview:1.4.0")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

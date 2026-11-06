@@ -285,6 +285,7 @@ public class NoteCreateActivity extends AppCompatActivity {
             Map<String, Object> note = Map.of(
                     "title", title,
                     "content", content,
+                    "isAiSupported", checkboxAiSupport.isChecked(),
                     "lastEdited", System.currentTimeMillis()
             );
 

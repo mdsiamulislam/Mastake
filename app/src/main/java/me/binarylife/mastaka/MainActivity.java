@@ -22,6 +22,11 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import androidx.drawerlayout.widget.DrawerLayout;
 
 public class MainActivity extends AppCompatActivity {
@@ -161,10 +166,17 @@ public class MainActivity extends AppCompatActivity {
 
         toolbar.setTitle(title);
 
+        Fragment fragment;
+
+        if (title.equals("My Notes")) {
+            fragment = new NotesFragment();
+        } else {
+            fragment = new PageFragment();
+        }
+
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fragmentContainer,
-                        PageFragment.newInstance(title))
+                .replace(R.id.fragmentContainer, fragment)
                 .commit();
     }
 
