@@ -5,18 +5,15 @@
 
         <item
             android:id="@+id/nav_notes"
-            android:icon="@android:drawable/ic_menu_edit"
             android:title="My Notes"
             android:checked="true" />
 
         <item
             android:id="@+id/nav_iot"
-            android:icon="@android:drawable/ic_menu_manage"
             android:title="IoT Devices" />
 
         <item
             android:id="@+id/nav_settings"
-            android:icon="@android:drawable/ic_menu_preferences"
             android:title="Settings" />
 
     </group>
@@ -26,12 +23,10 @@
 
             <item
                 android:id="@+id/nav_about"
-                android:icon="@android:drawable/ic_menu_info_details"
                 android:title="About Mastake" />
 
             <item
                 android:id="@+id/nav_logout"
-                android:icon="@android:drawable/ic_lock_power_off"
                 android:title="Logout" />
 
         </menu>
