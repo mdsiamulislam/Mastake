@@ -25,28 +25,32 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <!-- AI Writing Support Label -->
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Writing support with AI. Just explain your idea and let AI help you write it."
-            android:textColor="#929BAD"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08" />
+            android:orientation="vertical">
 
-        <!-- AI Writing Support Selector -->
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chipCategory"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="AI Writing Support"
-            android:textColor="#536DFE"
-            app:chipBackgroundColor="#E9ECFF"
-            app:chipIconVisible="false"
-            app:closeIconVisible="false"
-            android:checkable="false" />
+            <!-- Checkbox -->
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:id="@+id/checkboxAiSupport"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AI Writing Support"
+                android:textColor="#333333"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:checked="false" />
+
+            <!-- Description Text (চেকবক্সের সাথে সামঞ্জস্য রেখে একটু মার্জিন দেওয়া হয়েছে) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:text="Just explain your idea and let AI help you write it."
+                android:textColor="#929BAD"
+                android:textSize="11sp" />
+
+        </LinearLayout>
 
         <!-- Note Title -->
         <EditText

@@ -64,6 +64,9 @@ dependencies {
     // Firestore
     implementation("com.google.firebase:firebase-firestore")
 
+    // Gemini SDK
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
