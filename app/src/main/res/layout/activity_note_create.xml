@@ -101,17 +101,6 @@
         android:background="#FFFFFF"
         android:padding="20dp">
 
-        <!-- Last Edited -->
-        <TextView
-            android:id="@+id/tvLastEdited"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="New note · Not saved yet"
-            android:textColor="#929BAD"
-            android:textSize="12sp"
-            android:gravity="center"
-            android:layout_marginBottom="14dp" />
-
         <!-- Save Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSaveNote"
@@ -123,9 +112,17 @@
             android:textColor="#FFFFFF"
             app:backgroundTint="#536DFE"
             app:cornerRadius="14dp"
-            app:icon="@android:drawable/ic_menu_save"
             app:iconTint="#FFFFFF"
             app:iconGravity="textStart" />
+
+        <!-- Progess Indicator -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            style="?android:attr/progressBarStyleSmall" />
 
     </LinearLayout>
 

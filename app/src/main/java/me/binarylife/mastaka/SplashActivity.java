@@ -11,6 +11,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 public class SplashActivity extends AppCompatActivity {
 
     @Override
@@ -25,7 +28,13 @@ public class SplashActivity extends AppCompatActivity {
         });
 
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            startActivity(new Intent(SplashActivity.this, AuthActivity.class));
+
+            FirebaseUser curentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (curentUser != null) {
+                startActivity(new Intent(SplashActivity.this, MainActivity.class));
+            } else {
+                startActivity(new Intent(SplashActivity.this, AuthActivity.class));
+            }
             finish();
         }, 2000);
 
