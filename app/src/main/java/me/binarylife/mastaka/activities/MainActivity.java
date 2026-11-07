@@ -37,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Status Bar Color
+        getWindow().setStatusBarColor(getResources().getColor(R.color.white, null));
+
         // Initialize Views
         drawerLayout = findViewById(R.id.drawerLayout);
         toolbar = findViewById(R.id.toolbar);

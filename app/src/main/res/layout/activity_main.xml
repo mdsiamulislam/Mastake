@@ -25,7 +25,7 @@
             app:title="Mastake"
             app:titleTextColor="#172554"
             app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge"
-            app:navigationIcon="@android:drawable/ic_menu_sort_by_size"
+            app:navigationIcon="@drawable/ic_hamburger"
             app:elevation="0dp" />
 
         <!-- Fragment Container -->
