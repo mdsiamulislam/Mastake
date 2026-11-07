@@ -1,4 +1,4 @@
-package me.binarylife.mastaka;
+package me.binarylife.mastaka.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -26,6 +26,8 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
+
+import me.binarylife.mastaka.R;
 
 public class AuthActivity extends AppCompatActivity {
 

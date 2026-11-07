@@ -1,4 +1,4 @@
-package me.binarylife.mastaka;
+package me.binarylife.mastaka.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,6 +13,8 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+
+import me.binarylife.mastaka.R;
 
 public class SplashActivity extends AppCompatActivity {
 

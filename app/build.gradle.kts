@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
+
 }
 
 android {
@@ -69,6 +70,13 @@ dependencies {
 
     // RecyclerView
     implementation("androidx.recyclerview:recyclerview:1.4.0")
+
+    // Room Database
+    implementation("androidx.room:room-runtime:2.6.0")
+    annotationProcessor("androidx.room:room-compiler:2.6.0")
+
+    // WorkManager
+    implementation("androidx.work:work-runtime:2.9.1")
 
     // Testing
     testImplementation(libs.junit)

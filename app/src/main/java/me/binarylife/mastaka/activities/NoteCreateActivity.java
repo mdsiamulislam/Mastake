@@ -1,4 +1,4 @@
-package me.binarylife.mastaka;
+package me.binarylife.mastaka.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,20 +9,11 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.ai.client.generativeai.GenerativeModel;
-import com.google.ai.client.generativeai.java.GenerativeModelFutures;
-import com.google.ai.client.generativeai.type.Content;
-import com.google.ai.client.generativeai.type.GenerateContentResponse;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.checkbox.MaterialCheckBox;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,7 +25,11 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
+import java.util.UUID;
+
+import me.binarylife.mastaka.R;
+import me.binarylife.mastaka.models.Note;
+import me.binarylife.mastaka.repository.NoteRepository;
 
 public class NoteCreateActivity extends AppCompatActivity {
 
@@ -43,6 +38,11 @@ public class NoteCreateActivity extends AppCompatActivity {
     private MaterialToolbar noteToolbar;
     private ProgressBar progressBar;
     private MaterialCheckBox checkboxAiSupport;
+
+    private NoteRepository noteRepository;
+    private String existingNoteId = null;
+    private long existingCreatedAt = 0;
+    private long existingVersion = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,64 +56,71 @@ public class NoteCreateActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         checkboxAiSupport = findViewById(R.id.checkboxAiSupport);
 
+        noteRepository = new NoteRepository(this);
+
         // Back Button
         noteToolbar.setNavigationOnClickListener(v -> finish());
 
+        // Check if editing existing note
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra("note_id")) {
+            existingNoteId = intent.getStringExtra("note_id");
+            String title = intent.getStringExtra("note_title");
+            String content = intent.getStringExtra("note_content");
+            boolean isAi = intent.getBooleanExtra("is_ai", false);
+
+            etNoteTitle.setText(title);
+            etNoteContent.setText(content);
+            checkboxAiSupport.setChecked(isAi);
+            noteToolbar.setTitle("Edit Note");
+        }
+
         // Save Button Click
         btnSaveNote.setOnClickListener(v -> {
+            String title = etNoteTitle.getText().toString().trim();
+            String content = etNoteContent.getText().toString().trim();
+
+            if (title.isEmpty()) {
+                etNoteTitle.setError("Please enter note title");
+                etNoteTitle.requestFocus();
+                return;
+            }
+
+            if (content.isEmpty()) {
+                etNoteContent.setError("Please enter note content");
+                etNoteContent.requestFocus();
+                return;
+            }
+
             if (checkboxAiSupport.isChecked()) {
-                saveNoteWithAiSupport();
+                processNoteWithAi(title, content);
             } else {
-                saveNoteWithoutAiSupport();
+                saveNoteLocally(title, content, checkboxAiSupport.isChecked());
             }
         });
     }
 
-
-    private void saveNoteWithAiSupport() {
-
-        String rawTitle = etNoteTitle.getText().toString().trim();
-        String rawContent = etNoteContent.getText().toString().trim();
-
-        if (rawTitle.isEmpty() || rawContent.isEmpty()) {
-            Toast.makeText(
-                    this,
-                    "দয়া করে টাইটেল এবং কিছু লিখুন",
-                    Toast.LENGTH_SHORT
-            ).show();
-            return;
-        }
-
+    private void processNoteWithAi(String rawTitle, String rawContent) {
         setLoading(true);
+        Toast.makeText(this, "AI নোট গুছিয়ে দিচ্ছে...", Toast.LENGTH_SHORT).show();
 
-        Toast.makeText(
-                this,
-                "AI নোট গুছিয়ে দিচ্ছে...",
-                Toast.LENGTH_SHORT
-        ).show();
-
-        String apiKey = "YOUR_API";
+        String apiKey = "YOUR_API_KEY";
 
         new Thread(() -> {
-
             HttpURLConnection conn = null;
-
             try {
-
                 URL url = new URL(
-                        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key="
+                        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
                                 + apiKey
                 );
 
                 conn = (HttpURLConnection) url.openConnection();
-
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
                 conn.setConnectTimeout(15000);
                 conn.setReadTimeout(30000);
                 conn.setDoOutput(true);
 
-                // Create AI prompt
                 String prompt =
                         "Act as a professional note writer. " +
                                 "Rewrite and organize the following note into a clean, " +
@@ -124,7 +131,6 @@ public class NoteCreateActivity extends AppCompatActivity {
                                 "Title: " + rawTitle + "\n\n" +
                                 "Content: " + rawContent;
 
-                // Build JSON request
                 JSONObject textPart = new JSONObject();
                 textPart.put("text", prompt);
 
@@ -140,172 +146,106 @@ public class NoteCreateActivity extends AppCompatActivity {
                 JSONObject requestBody = new JSONObject();
                 requestBody.put("contents", contents);
 
-                // Send request
                 try (OutputStream os = conn.getOutputStream()) {
                     os.write(requestBody.toString().getBytes(StandardCharsets.UTF_8));
                     os.flush();
                 }
 
                 int responseCode = conn.getResponseCode();
-
-                InputStream inputStream;
-
-                if (responseCode >= 200 && responseCode < 300) {
-                    inputStream = conn.getInputStream();
-                } else {
-                    inputStream = conn.getErrorStream();
-                }
+                InputStream inputStream = (responseCode >= 200 && responseCode < 300)
+                        ? conn.getInputStream()
+                        : conn.getErrorStream();
 
                 StringBuilder response = new StringBuilder();
-
                 if (inputStream != null) {
-
                     try (BufferedReader reader = new BufferedReader(
                             new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-
                         String line;
-
                         while ((line = reader.readLine()) != null) {
                             response.append(line);
                         }
                     }
                 }
 
-                String responseString = response.toString();
-
                 if (responseCode >= 200 && responseCode < 300) {
-
-                    // Extract AI-generated text
-                    JSONObject responseJson = new JSONObject(responseString);
-
+                    JSONObject responseJson = new JSONObject(response.toString());
                     JSONArray candidates = responseJson.getJSONArray("candidates");
-
                     JSONObject firstCandidate = candidates.getJSONObject(0);
-
-                    JSONObject responseContent =
-                            firstCandidate.getJSONObject("content");
-
-                    JSONArray responseParts =
-                            responseContent.getJSONArray("parts");
+                    JSONObject responseContent = firstCandidate.getJSONObject("content");
+                    JSONArray responseParts = responseContent.getJSONArray("parts");
 
                     StringBuilder aiText = new StringBuilder();
-
                     for (int i = 0; i < responseParts.length(); i++) {
-
                         JSONObject part = responseParts.getJSONObject(i);
-
                         if (part.has("text")) {
                             aiText.append(part.getString("text"));
                         }
                     }
 
                     String organizedNote = aiText.toString().trim();
-
                     if (organizedNote.isEmpty()) {
-                        throw new Exception("AI returned an empty note");
+                        organizedNote = rawContent;
                     }
 
-                    runOnUiThread(() -> {
-
-                        setLoading(false);
-
-                        // Save organized note to Firestore
-                        saveNoteToFirestore(rawTitle, organizedNote);
-
-                    });
+                    String finalOrganizedNote = organizedNote;
+                    runOnUiThread(() -> saveNoteLocally(rawTitle, finalOrganizedNote, true));
 
                 } else {
-
+                    // Fallback to saving without AI if API fails/offline
                     runOnUiThread(() -> {
-
-                        setLoading(false);
-                        System.err.println("API Error " + responseCode + ": " + responseString);
-
-                        Toast.makeText(
-                                NoteCreateActivity.this,
-                                "API Error " + responseCode + ": " + responseString,
-                                Toast.LENGTH_LONG
-                        ).show();
-
+                        Toast.makeText(this, "AI unavailable (Offline). Saving original note.", Toast.LENGTH_LONG).show();
+                        saveNoteLocally(rawTitle, rawContent, false);
                     });
                 }
 
             } catch (Exception e) {
-
+                // Fallback to saving without AI if offline or exception
                 runOnUiThread(() -> {
-
-                    setLoading(false);
-
-                    Toast.makeText(
-                            NoteCreateActivity.this,
-                            "Error: " + e.getMessage(),
-                            Toast.LENGTH_LONG
-                    ).show();
-
+                    Toast.makeText(this, "Offline mode: Saving original note without AI.", Toast.LENGTH_SHORT).show();
+                    saveNoteLocally(rawTitle, rawContent, false);
                 });
-
             } finally {
-
                 if (conn != null) {
                     conn.disconnect();
                 }
             }
-
         }).start();
     }
 
-
-    private void saveNoteWithoutAiSupport() {
-        String title = etNoteTitle.getText().toString().trim();
-        String content = etNoteContent.getText().toString().trim();
-
-        if (title.isEmpty()) {
-            etNoteTitle.setError("Please enter note title");
-            etNoteTitle.requestFocus();
-            return;
-        }
-
-        if (content.isEmpty()) {
-            etNoteContent.setError("Please enter note content");
-            etNoteContent.requestFocus();
-            return;
-        }
-
-        setLoading(true);
-        saveNoteToFirestore(title, content);
-    }
-
-    private void saveNoteToFirestore(String title, String content) {
+    private void saveNoteLocally(String title, String content, boolean isAiSupported) {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        FirebaseFirestore firebasedb = FirebaseFirestore.getInstance();
-
-        if (currentUser != null) {
-            String userId = currentUser.getUid();
-            Map<String, Object> note = Map.of(
-                    "title", title,
-                    "content", content,
-                    "isAiSupported", checkboxAiSupport.isChecked(),
-                    "lastEdited", System.currentTimeMillis()
-            );
-
-            firebasedb.collection("users").document(userId).collection("notes")
-                    .add(note)
-                    .addOnSuccessListener(documentReference -> {
-                        Toast.makeText(NoteCreateActivity.this, "Note saved successfully", Toast.LENGTH_SHORT).show();
-                        finish();
-                    })
-                    .addOnFailureListener(e -> {
-                        setLoading(false);
-                        Toast.makeText(NoteCreateActivity.this, "Error saving note: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
-        } else {
+        if (currentUser == null) {
             setLoading(false);
-            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "User not authenticated. Please login.", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, AuthActivity.class));
+            finish();
+            return;
         }
+
+        String userId = currentUser.getUid();
+        boolean isNew = (existingNoteId == null);
+        String noteId = isNew ? UUID.randomUUID().toString() : existingNoteId;
+
+        Note note = new Note(
+                noteId,
+                userId,
+                title,
+                content,
+                isAiSupported
+        );
+
+        if (!isNew) {
+            note.setCreatedAt(existingCreatedAt != 0 ? existingCreatedAt : System.currentTimeMillis());
+            note.setVersion(existingVersion + 1);
+        }
+
+        noteRepository.insertOrUpdateNote(note, isNew);
+
+        setLoading(false);
+        Toast.makeText(this, "Note saved locally & queued for sync", Toast.LENGTH_SHORT).show();
+        finish();
     }
 
-    // প্রোগ্রেসবার এবং বাটন কন্ট্রোল করার জন্য হেল্পার মেথড
     private void setLoading(boolean isLoading) {
         if (isLoading) {
             btnSaveNote.setVisibility(View.INVISIBLE);

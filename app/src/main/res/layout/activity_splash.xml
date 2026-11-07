@@ -7,7 +7,7 @@
     android:gravity="center"
     android:background="#F7F8FC"
     android:padding="24dp"
-    tools:context=".SplashActivity">
+    tools:context=".activities.SplashActivity">
 
     <!-- App Branding -->
     <LinearLayout

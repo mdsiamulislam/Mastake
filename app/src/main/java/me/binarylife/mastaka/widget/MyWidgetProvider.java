@@ -1,5 +1,5 @@
 
-package me.binarylife.mastaka;
+package me.binarylife.mastaka.widget;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -7,6 +7,9 @@ import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
+
+import me.binarylife.mastaka.R;
+import me.binarylife.mastaka.activities.NoteCreateActivity;
 
 public class MyWidgetProvider extends AppWidgetProvider {
 

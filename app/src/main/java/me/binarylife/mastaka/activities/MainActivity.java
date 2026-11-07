@@ -1,10 +1,9 @@
-package me.binarylife.mastaka;
+package me.binarylife.mastaka.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -19,6 +18,9 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
 import androidx.drawerlayout.widget.DrawerLayout;
+
+import me.binarylife.mastaka.fragments.NotesFragment;
+import me.binarylife.mastaka.R;
 
 public class MainActivity extends AppCompatActivity {
 

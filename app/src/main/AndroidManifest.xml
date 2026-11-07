@@ -14,14 +14,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Mastaka">
         <activity
-            android:name=".NoteCreateActivity"
+            android:name=".activities.NoteCreateActivity"
             android:exported="false"
             android:theme="@style/Theme.Mastaka" />
         <activity
-            android:name=".AuthActivity"
+            android:name=".activities.AuthActivity"
             android:exported="false" />
         <activity
-            android:name=".SplashActivity"
+            android:name=".activities.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,12 +30,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:exported="false" />
 
 
         <receiver
-            android:name=".MyWidgetProvider"
+            android:name=".widget.MyWidgetProvider"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

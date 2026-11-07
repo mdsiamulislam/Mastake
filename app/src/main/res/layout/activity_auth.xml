@@ -8,7 +8,7 @@
     android:gravity="center_horizontal"
     android:background="#F7F8FC"
     android:padding="28dp"
-    tools:context=".AuthActivity">
+    tools:context=".activities.AuthActivity">
 
     <!-- Main Content -->
     <LinearLayout

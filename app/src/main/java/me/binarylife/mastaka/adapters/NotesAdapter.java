@@ -1,6 +1,6 @@
+package me.binarylife.mastaka.adapters;
 
-package me.binarylife.mastaka;
-
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,12 +11,21 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import me.binarylife.mastaka.models.Note;
+import me.binarylife.mastaka.R;
+
 public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHolder> {
 
     private final List<Note> noteList;
+    private final OnNoteClickListener listener;
 
-    public NotesAdapter(List<Note> noteList) {
+    public interface OnNoteClickListener {
+        void onNoteClick(Note note);
+    }
+
+    public NotesAdapter(List<Note> noteList, OnNoteClickListener listener) {
         this.noteList = noteList;
+        this.listener = listener;
     }
 
     @NonNull
@@ -42,6 +51,20 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
         holder.tvAiSupported.setVisibility(
                 note.isAiSupported() ? View.VISIBLE : View.GONE
         );
+
+        if (note.getSyncStatus() == 0) {
+            holder.tvSyncStatus.setText("● Synced");
+            holder.tvSyncStatus.setTextColor(Color.parseColor("#4CAF50")); // Green
+        } else {
+            holder.tvSyncStatus.setText("○ Pending Sync");
+            holder.tvSyncStatus.setTextColor(Color.parseColor("#FF9800")); // Orange
+        }
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onNoteClick(note);
+            }
+        });
     }
 
     @Override
@@ -51,7 +74,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
 
     static class NoteViewHolder extends RecyclerView.ViewHolder {
 
-        TextView tvTitle, tvDescription, tvAiSupported;
+        TextView tvTitle, tvDescription, tvAiSupported, tvSyncStatus;
 
         public NoteViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -59,6 +82,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
             tvTitle = itemView.findViewById(R.id.tvNoteTitle);
             tvDescription = itemView.findViewById(R.id.tvNoteDescription);
             tvAiSupported = itemView.findViewById(R.id.tvAiSupported);
+            tvSyncStatus = itemView.findViewById(R.id.tvSyncStatus);
         }
     }
 }
