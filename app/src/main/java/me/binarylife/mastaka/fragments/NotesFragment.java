@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -68,20 +69,28 @@ public class NotesFragment extends Fragment {
         rvNotes = view.findViewById(R.id.rvNotes);
         noteList = new ArrayList<>();
 
-        notesAdapter = new NotesAdapter(noteList, note -> {
-            // Click note to edit
-            Intent intent = new Intent(requireContext(), NoteCreateActivity.class);
-            intent.putExtra("note_id", note.getId());
-            intent.putExtra("note_title", note.getTitle());
-            intent.putExtra("note_content", note.getDescription());
-            intent.putExtra("is_ai", note.isAiSupported());
-            startActivity(intent);
+        noteRepository = new NoteRepository(requireContext());
+
+        notesAdapter = new NotesAdapter(noteList, new NotesAdapter.OnNoteActionListener() {
+            @Override
+            public void onEditClick(Note note) {
+                Intent intent = new Intent(requireContext(), NoteCreateActivity.class);
+                intent.putExtra("note_id", note.getId());
+                intent.putExtra("note_title", note.getTitle());
+                intent.putExtra("note_content", note.getDescription());
+                intent.putExtra("is_ai", note.isAiSupported());
+                startActivity(intent);
+            }
+
+            @Override
+            public void onDeleteClick(Note note) {
+                noteRepository.deleteNote(note);
+                Toast.makeText(requireContext(), "Note deleted", Toast.LENGTH_SHORT).show();
+            }
         });
 
         rvNotes.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvNotes.setAdapter(notesAdapter);
-
-        noteRepository = new NoteRepository(requireContext());
 
         observeNotes();
 

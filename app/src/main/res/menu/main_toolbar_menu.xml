@@ -1,17 +1,10 @@
-
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_search"
-        android:icon="@android:drawable/ic_menu_search"
-        android:title="Search"
-        app:showAsAction="always" />
-
-    <item
-        android:id="@+id/action_iot"
-        android:icon="@android:drawable/ic_menu_manage"
-        android:title="IoT Devices"
+        android:id="@+id/action_refresh"
+        android:icon="@android:drawable/ic_popup_sync"
+        android:title="Refresh"
         app:showAsAction="always" />
 
 </menu>

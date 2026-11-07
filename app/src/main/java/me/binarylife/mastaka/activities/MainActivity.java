@@ -20,7 +20,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import me.binarylife.mastaka.fragments.NotesFragment;
+import me.binarylife.mastaka.repository.NoteRepository;
 import me.binarylife.mastaka.R;
+import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -136,20 +138,16 @@ public class MainActivity extends AppCompatActivity {
 
         int id = item.getItemId();
 
-        if (id == R.id.action_search) {
-
-            Toast.makeText(this,
-                    "Search Notes",
-                    Toast.LENGTH_SHORT).show();
-
-            return true;
-
-        } else if (id == R.id.action_iot) {
-
-            Toast.makeText(this,
-                    "IoT Devices",
-                    Toast.LENGTH_SHORT).show();
-
+        if (id == R.id.action_refresh) {
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                NoteRepository repository = new NoteRepository(this);
+                repository.fetchAndSyncFromCloud(currentUser.getUid());
+                repository.triggerSync();
+                Toast.makeText(this, "Refreshing notes from cloud...", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Not authenticated", Toast.LENGTH_SHORT).show();
+            }
             return true;
         }
 
