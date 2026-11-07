@@ -30,6 +30,7 @@ import java.util.UUID;
 import me.binarylife.mastaka.R;
 import me.binarylife.mastaka.models.Note;
 import me.binarylife.mastaka.repository.NoteRepository;
+import me.binarylife.mastaka.utils.IoTBackgroundSyncHelper;
 
 public class NoteCreateActivity extends AppCompatActivity {
 
@@ -240,6 +241,9 @@ public class NoteCreateActivity extends AppCompatActivity {
         }
 
         noteRepository.insertOrUpdateNote(note, isNew);
+
+        // Auto try to send notes data to IoT device in background when adding/saving a note
+        IoTBackgroundSyncHelper.syncToIoT(this);
 
         setLoading(false);
         Toast.makeText(this, "Note saved locally & queued for sync", Toast.LENGTH_SHORT).show();

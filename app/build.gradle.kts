@@ -71,6 +71,9 @@ dependencies {
     // RecyclerView
     implementation("androidx.recyclerview:recyclerview:1.4.0")
 
+    // Lifecycle LiveData
+    implementation("androidx.lifecycle:lifecycle-livedata:2.7.0")
+
     // Room Database
     implementation("androidx.room:room-runtime:2.6.0")
     annotationProcessor("androidx.room:room-compiler:2.6.0")

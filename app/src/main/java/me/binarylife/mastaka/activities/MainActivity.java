@@ -22,6 +22,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import me.binarylife.mastaka.fragments.NotesFragment;
 import me.binarylife.mastaka.repository.NoteRepository;
 import me.binarylife.mastaka.R;
+import me.binarylife.mastaka.utils.IoTBackgroundSyncHelper;
 import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
@@ -49,6 +50,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup Toolbar
         setSupportActionBar(toolbar);
+
+        // Auto sync data to IoT device on app start (background)
+        IoTBackgroundSyncHelper.syncToIoT(this);
 
         toolbar.setNavigationOnClickListener(v ->
                 drawerLayout.openDrawer(GravityCompat.START)
