@@ -24,11 +24,11 @@
     <string name="share_notes_subtitle">Export and share all notes via other apps</string>
     <string name="github_title">Open project on GitHub</string>
     <string name="github_subtitle">View source code and repository</string>
-    <string name="github_url">https://github.com/binarylife/mastake</string>
+    <string name="github_url">https://github.com/mdsiamulislam/Mastake</string>
     <string name="support_call_title">Call support</string>
     <string name="support_call_subtitle">Get immediate assistance via phone</string>
-    <string name="support_phone">tel:+8801700000000</string>
+    <string name="support_phone">tel:+8801682684452</string>
     <string name="email_dev_title">Email the developer</string>
     <string name="email_dev_subtitle">Send feedback or report bugs</string>
-    <string name="developer_email">support@binarylife.me</string>
+    <string name="developer_email">team@binarylife.me</string>
 </resources>

@@ -3,6 +3,7 @@ package me.binarylife.mastaka.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -38,7 +39,7 @@ import me.binarylife.mastaka.utils.UiMessage;
 
 public class NoteCreateActivity extends AppCompatActivity {
 
-    private static final String GEMINI_MODEL = "gemini-1.5-flash";
+    private static final String GEMINI_MODEL = "gemini-3.5-flash-lite";
 
     private EditText etNoteTitle, etNoteContent;
     private MaterialButton btnSaveNote;
@@ -125,122 +126,167 @@ public class NoteCreateActivity extends AppCompatActivity {
     }
 
     private void processNoteWithAi(String rawTitle, String rawContent) {
-        String apiKey = me.binarylife.mastaka.BuildConfig.GEMINI_API_KEY;
 
-        if (apiKey == null || apiKey.isEmpty() || apiKey.equals("YOUR_API_KEY")) {
-            UiMessage.showError(btnSaveNote, "AI API key not configured. Saving original note.");
-            saveNoteLocally(rawTitle, rawContent, false);
+        // TODO: push করার আগে এই key মুছে দিন
+        final String apiKey = "";
+        final String model = "gemini-3.5-flash-lite";
+
+        if (apiKey.equals("PASTE_NEW_KEY_HERE") || apiKey.trim().isEmpty()) {
+            UiMessage.showError(btnSaveNote, "AI key missing. Paste your API key in the code.");
             return;
         }
 
         setLoading(true, "AI is writing…");
 
         new Thread(() -> {
-            HttpURLConnection conn = null;
-            try {
-                URL url = new URL(
-                        "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key="
-                                + apiKey
-                );
+            String aiResult = null;   // সফল হলে AI-র লেখা
+            String errorMsg = null;   // fail হলে কারণ
 
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setConnectTimeout(15000);
-                conn.setReadTimeout(30000);
-                conn.setDoOutput(true);
+            // সাময়িক সমস্যা (429/500/503) হলে একবার আবার চেষ্টা
+            for (int attempt = 1; attempt <= 2 && aiResult == null; attempt++) {
+                HttpURLConnection conn = null;
+                try {
+                    URL url = new URL("https://generativelanguage.googleapis.com/v1beta/models/"
+                            + model + ":generateContent");
 
-                String prompt =
-                        "Act as a professional note writer. " +
-                                "Rewrite and organize the following note into a clean, " +
-                                "well-formatted and easy-to-read note. " +
-                                "Preserve the original meaning and important information. " +
-                                "Do not add unrelated information. " +
-                                "Return only the organized note.\n\n" +
-                                "Title: " + rawTitle + "\n\n" +
-                                "Content: " + rawContent;
+                    conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    conn.setRequestProperty("x-goog-api-key", apiKey);
+                    conn.setConnectTimeout(15000);
+                    conn.setReadTimeout(45000);
+                    conn.setDoOutput(true);
 
-                JSONObject textPart = new JSONObject();
-                textPart.put("text", prompt);
+                    String prompt =
+                            "Act as a professional note writer. "
+                                    + "Rewrite and organize the following note into a clean, "
+                                    + "well-formatted and easy-to-read note. "
+                                    + "Preserve the original meaning and important information. "
+                                    + "Keep the same language as the original note. "
+                                    + "Do not add unrelated information. "
+                                    + "Return only the organized note, without any extra comments.\n\n"
+                                    + "Title: " + rawTitle + "\n\n"
+                                    + "Content: " + rawContent;
 
-                JSONArray parts = new JSONArray();
-                parts.put(textPart);
+                    JSONObject textPart = new JSONObject().put("text", prompt);
+                    JSONObject contentObject = new JSONObject()
+                            .put("parts", new JSONArray().put(textPart));
+                    JSONObject requestBody = new JSONObject()
+                            .put("contents", new JSONArray().put(contentObject));
 
-                JSONObject contentObject = new JSONObject();
-                contentObject.put("parts", parts);
+                    try (OutputStream os = conn.getOutputStream()) {
+                        os.write(requestBody.toString().getBytes(StandardCharsets.UTF_8));
+                        os.flush();
+                    }
 
-                JSONArray contents = new JSONArray();
-                contents.put(contentObject);
+                    int code = conn.getResponseCode();
+                    boolean ok = code >= 200 && code < 300;
+                    InputStream stream = ok ? conn.getInputStream() : conn.getErrorStream();
 
-                JSONObject requestBody = new JSONObject();
-                requestBody.put("contents", contents);
-
-                try (OutputStream os = conn.getOutputStream()) {
-                    os.write(requestBody.toString().getBytes(StandardCharsets.UTF_8));
-                    os.flush();
-                }
-
-                int responseCode = conn.getResponseCode();
-                InputStream inputStream = (responseCode >= 200 && responseCode < 300)
-                        ? conn.getInputStream()
-                        : conn.getErrorStream();
-
-                StringBuilder response = new StringBuilder();
-                if (inputStream != null) {
-                    try (BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            response.append(line);
+                    StringBuilder sb = new StringBuilder();
+                    if (stream != null) {
+                        try (BufferedReader reader = new BufferedReader(
+                                new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                sb.append(line);
+                            }
                         }
                     }
-                }
+                    String body = sb.toString();
+                    Log.d("NoteCreate", "Gemini http=" + code + " attempt=" + attempt);
 
-                if (responseCode >= 200 && responseCode < 300) {
-                    JSONObject responseJson = new JSONObject(response.toString());
-                    JSONArray candidates = responseJson.getJSONArray("candidates");
-                    JSONObject firstCandidate = candidates.getJSONObject(0);
-                    JSONObject responseContent = firstCandidate.getJSONObject("content");
-                    JSONArray responseParts = responseContent.getJSONArray("parts");
+                    if (!ok) {
+                        Log.e("NoteCreate", "Gemini error body: " + body);
 
-                    StringBuilder aiText = new StringBuilder();
-                    for (int i = 0; i < responseParts.length(); i++) {
-                        JSONObject part = responseParts.getJSONObject(i);
-                        if (part.has("text")) {
-                            aiText.append(part.getString("text"));
+                        boolean retryable = (code == 429 || code == 500 || code == 503);
+                        if (retryable && attempt < 2) {
+                            Thread.sleep(2000);
+                            continue;
+                        }
+
+                        String apiMsg = "";
+                        try {
+                            apiMsg = new JSONObject(body).getJSONObject("error").getString("message");
+                        } catch (Exception ignored) { }
+
+                        switch (code) {
+                            case 400: errorMsg = "AI request rejected (400). Check API key and model. " + apiMsg; break;
+                            case 401:
+                            case 403: errorMsg = "AI key not allowed (" + code + "). Check the key."; break;
+                            case 404: errorMsg = "AI model not found (404). Check the model name."; break;
+                            case 429: errorMsg = "AI limit reached (429). Wait a minute and try again."; break;
+                            case 500:
+                            case 503: errorMsg = "AI server is busy (" + code + "). Try again shortly."; break;
+                            default:  errorMsg = "AI failed (" + code + "). " + apiMsg; break;
+                        }
+                        break;
+                    }
+
+                    // সফল response পড়া
+                    JSONObject json = new JSONObject(body);
+
+                    if (json.has("promptFeedback")
+                            && json.getJSONObject("promptFeedback").has("blockReason")) {
+                        errorMsg = "AI blocked this text ("
+                                + json.getJSONObject("promptFeedback").getString("blockReason") + ")";
+                        break;
+                    }
+
+                    JSONArray candidates = json.optJSONArray("candidates");
+                    if (candidates == null || candidates.length() == 0) {
+                        errorMsg = "AI returned no result. Try again.";
+                        break;
+                    }
+
+                    JSONObject content = candidates.getJSONObject(0).optJSONObject("content");
+                    JSONArray parts = content != null ? content.optJSONArray("parts") : null;
+
+                    StringBuilder text = new StringBuilder();
+                    if (parts != null) {
+                        for (int i = 0; i < parts.length(); i++) {
+                            JSONObject part = parts.getJSONObject(i);
+                            if (part.optBoolean("thought", false)) continue;
+                            if (part.has("text")) text.append(part.getString("text"));
                         }
                     }
 
-                    String organizedNote = aiText.toString().trim();
-                    if (organizedNote.isEmpty()) {
-                        organizedNote = rawContent;
+                    String result = text.toString().trim();
+                    if (result.isEmpty()) {
+                        errorMsg = "AI returned an empty answer. Try again.";
+                        break;
                     }
+                    aiResult = result;
 
-                    String finalOrganizedNote = organizedNote;
-                    runOnUiThread(() -> {
-                        if (isFinishing()) return;
-                        saveNoteLocally(rawTitle, finalOrganizedNote, true);
-                    });
-
-                } else {
-                    runOnUiThread(() -> {
-                        if (isFinishing()) return;
-                        UiMessage.showError(btnSaveNote, "AI unavailable. Saving original note.");
-                        saveNoteLocally(rawTitle, rawContent, false);
-                    });
-                }
-
-            } catch (Exception e) {
-                runOnUiThread(() -> {
-                    if (isFinishing()) return;
-                    UiMessage.showInfo(btnSaveNote, "Offline mode: Saving original note without AI.");
-                    saveNoteLocally(rawTitle, rawContent, false);
-                });
-            } finally {
-                if (conn != null) {
-                    conn.disconnect();
+                } catch (java.net.UnknownHostException | java.net.ConnectException e) {
+                    errorMsg = "No internet connection. Connect and try again.";
+                    break;
+                } catch (java.net.SocketTimeoutException e) {
+                    errorMsg = "AI took too long to respond. Try again.";
+                } catch (Exception e) {
+                    Log.e("NoteCreate", "Gemini exception", e);
+                    errorMsg = "AI error: " + e.getClass().getSimpleName();
+                    break;
+                } finally {
+                    if (conn != null) conn.disconnect();
                 }
             }
+
+            final String finalResult = aiResult;
+            final String finalError = (errorMsg != null) ? errorMsg : "AI failed. Try again.";
+
+            runOnUiThread(() -> {
+                if (isFinishing()) return;
+
+                if (finalResult != null) {
+                    // AI সফল হলেই save হবে
+                    saveNoteLocally(rawTitle, finalResult, true);
+                } else {
+                    // Save হবে না। লেখা থাকবে, user আবার চেষ্টা করতে পারবে
+                    setLoading(false, null);
+                    UiMessage.showError(btnSaveNote, finalError);
+                }
+            });
         }).start();
     }
 
