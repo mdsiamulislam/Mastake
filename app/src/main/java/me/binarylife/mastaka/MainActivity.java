@@ -16,6 +16,7 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
 
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -100,9 +101,11 @@ public class MainActivity extends AppCompatActivity {
 
             } else if (id == R.id.nav_logout) {
 
-                Toast.makeText(this,
-                        "Logout coming soon!",
-                        Toast.LENGTH_SHORT).show();
+                // Logout logic here with Firebase Authentication
+                FirebaseAuth.getInstance().signOut();
+                Intent intent = new Intent(MainActivity.this, AuthActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
             }
 
             drawerLayout.closeDrawer(GravityCompat.START);
