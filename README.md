@@ -57,20 +57,20 @@ Developed as a final university project for the **Mobile Application and Develop
 
 The following features were implemented to fulfill additional university lab requirements.
 
-### 6. Image to Text (#10)
+### 6. Image to Text
 - Capture images using the device camera.
 - Select images from the device gallery.
 - Uses `FileProvider` and `ActivityResultContracts`.
 - Safely previews downscaled images to prevent OutOfMemory (OOM) errors.
 - Prepares image content for OCR processing.
 
-### 7. Shake to Sync (#11)
+### 7. Shake to Sync
 - Detects phone shaking using `SensorManager` and the accelerometer.
 - Automatically triggers note synchronization with the ESP32.
 - Provides haptic feedback using `VibratorManager` / `Vibrator`.
 - Allows users to trigger synchronization through a physical gesture.
 
-### 8. Share & Open (#12)
+### 8. Share & Open
 
 A dedicated actions screen provides the following functionalities:
 
@@ -118,7 +118,7 @@ Make sure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/binarylife/mastake.git
+https://github.com/mdsiamulislam/Mastake
 
 cd mastake
 ```
