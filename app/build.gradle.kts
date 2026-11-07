@@ -1,7 +1,9 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
-
 }
 
 android {
@@ -16,6 +18,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(FileInputStream(localPropertiesFile))
+        }
+        val geminiApiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiApiKey\"")
     }
 
     buildTypes {
@@ -33,6 +43,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -52,10 +63,10 @@ dependencies {
     // UI Components
     implementation("androidx.viewpager2:viewpager2:1.1.0")
 
-    // Firebase BoM (সঠিক ভার্সন শুধু একবার থাকবে)
+    // Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
 
-    // Firebase Products (BoM version কন্ট্রোল করবে তাই আলাদা ভার্সন লাগবে না)
+    // Firebase Products
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
 
@@ -81,7 +92,7 @@ dependencies {
     // WorkManager
     implementation("androidx.work:work-runtime:2.9.1")
 
-    //gjson
+    // gson
     implementation("com.google.code.gson:gson:2.10.1")
 
     // location

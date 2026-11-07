@@ -32,7 +32,7 @@ import me.binarylife.mastaka.R;
 public class AuthActivity extends AppCompatActivity {
 
     private static final String TAG = "AuthActivity";
-    LinearLayout btnGoogleSignIn;
+    com.google.android.material.card.MaterialCardView btnGoogleSignIn;
     TextView googleIcon, googleText;
     ProgressBar googleProgressBar;
 

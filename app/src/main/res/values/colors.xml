@@ -19,5 +19,7 @@
     <color name="outline">#CBD5E1</color>
     <color name="error">#EF4444</color>
     <color name="onError">#FFFFFF</color>
+    <color name="success_color">#10B981</color>
+    <color name="onSuccess_color">#FFFFFF</color>
     <color name="cardBackground">#FFFFFF</color>
 </resources>

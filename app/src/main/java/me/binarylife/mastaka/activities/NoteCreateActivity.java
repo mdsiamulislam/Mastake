@@ -34,13 +34,16 @@ import me.binarylife.mastaka.R;
 import me.binarylife.mastaka.models.Note;
 import me.binarylife.mastaka.repository.NoteRepository;
 import me.binarylife.mastaka.utils.IoTBackgroundSyncHelper;
+import me.binarylife.mastaka.utils.UiMessage;
 
 public class NoteCreateActivity extends AppCompatActivity {
+
+    private static final String GEMINI_MODEL = "gemini-1.5-flash";
 
     private EditText etNoteTitle, etNoteContent;
     private MaterialButton btnSaveNote;
     private MaterialToolbar noteToolbar;
-    private ProgressBar progressBar;          // এখন LinearProgressIndicator, এটা ProgressBar-এরই subclass
+    private ProgressBar progressBar;
     private MaterialCheckBox checkboxAiSupport;
     private MaterialCardView cardAiSupport;
 
@@ -70,7 +73,6 @@ public class NoteCreateActivity extends AppCompatActivity {
         // Back Button
         noteToolbar.setNavigationOnClickListener(v -> finish());
 
-        // পুরো card চাপলে checkbox toggle হবে
         cardAiSupport.setOnClickListener(v -> checkboxAiSupport.toggle());
 
         // Check if editing existing note
@@ -81,7 +83,6 @@ public class NoteCreateActivity extends AppCompatActivity {
             String content = intent.getStringExtra("note_content");
             boolean isAi = intent.getBooleanExtra("is_ai", false);
 
-            // আগে এগুলো কখনো সেট হতো না। Adapter থেকে পাঠালে এখানে পাওয়া যাবে
             existingCreatedAt = intent.getLongExtra("note_created_at", 0);
             existingVersion = intent.getLongExtra("note_version", 1);
 
@@ -124,16 +125,21 @@ public class NoteCreateActivity extends AppCompatActivity {
     }
 
     private void processNoteWithAi(String rawTitle, String rawContent) {
-        setLoading(true, "AI is writing…");
-        Toast.makeText(this, "AI নোট গুছিয়ে দিচ্ছে...", Toast.LENGTH_SHORT).show();
+        String apiKey = me.binarylife.mastaka.BuildConfig.GEMINI_API_KEY;
 
-        String apiKey = "YOUR_API_KEY";
+        if (apiKey == null || apiKey.isEmpty() || apiKey.equals("YOUR_API_KEY")) {
+            UiMessage.showError(btnSaveNote, "AI API key not configured. Saving original note.");
+            saveNoteLocally(rawTitle, rawContent, false);
+            return;
+        }
+
+        setLoading(true, "AI is writing…");
 
         new Thread(() -> {
             HttpURLConnection conn = null;
             try {
                 URL url = new URL(
-                        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="
+                        "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key="
                                 + apiKey
                 );
 
@@ -217,19 +223,17 @@ public class NoteCreateActivity extends AppCompatActivity {
                     });
 
                 } else {
-                    // API fail হলে AI ছাড়াই save
                     runOnUiThread(() -> {
                         if (isFinishing()) return;
-                        Toast.makeText(this, "AI unavailable. Saving original note.", Toast.LENGTH_LONG).show();
+                        UiMessage.showError(btnSaveNote, "AI unavailable. Saving original note.");
                         saveNoteLocally(rawTitle, rawContent, false);
                     });
                 }
 
             } catch (Exception e) {
-                // Offline বা exception হলে AI ছাড়াই save
                 runOnUiThread(() -> {
                     if (isFinishing()) return;
-                    Toast.makeText(this, "Offline mode: Saving original note without AI.", Toast.LENGTH_SHORT).show();
+                    UiMessage.showInfo(btnSaveNote, "Offline mode: Saving original note without AI.");
                     saveNoteLocally(rawTitle, rawContent, false);
                 });
             } finally {
@@ -269,7 +273,6 @@ public class NoteCreateActivity extends AppCompatActivity {
 
         noteRepository.insertOrUpdateNote(note, isNew);
 
-        // Note save হলে background-এ IoT device-এ পাঠানোর চেষ্টা
         IoTBackgroundSyncHelper.syncToIoT(this);
 
         setLoading(false, null);
@@ -277,7 +280,6 @@ public class NoteCreateActivity extends AppCompatActivity {
         finish();
     }
 
-    // Loading: button disable, উপরে পাতলা progress line, input বন্ধ
     private void setLoading(boolean isLoading, String loadingLabel) {
         isSaving = isLoading;
 

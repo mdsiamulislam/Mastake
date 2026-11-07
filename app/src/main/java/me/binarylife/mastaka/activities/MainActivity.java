@@ -103,6 +103,18 @@ public class MainActivity extends AppCompatActivity {
 
                 startActivity(new Intent(MainActivity.this, IotActivity.class));
 
+            } else if (id == R.id.nav_image_to_text) {
+
+                startActivity(new Intent(MainActivity.this, ImageToTextActivity.class));
+
+            } else if (id == R.id.nav_shake_sync) {
+
+                startActivity(new Intent(MainActivity.this, ShakeSyncActivity.class));
+
+            } else if (id == R.id.nav_share_open) {
+
+                startActivity(new Intent(MainActivity.this, ActionsActivity.class));
+
             } else if (id == R.id.nav_theme) {
 
                 showThemeDialog();

@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:checkableBehavior="single">
@@ -19,6 +20,25 @@
             android:title="IoT Devices" />
 
     </group>
+
+    <item android:title="Tools">
+        <menu>
+            <item
+                android:id="@+id/nav_image_to_text"
+                android:icon="@drawable/ic_image_search"
+                android:title="Image to Text" />
+
+            <item
+                android:id="@+id/nav_shake_sync"
+                android:icon="@drawable/ic_vibration"
+                android:title="Shake to Sync" />
+
+            <item
+                android:id="@+id/nav_share_open"
+                android:icon="@drawable/ic_share_open"
+                android:title="Share &amp; Open" />
+        </menu>
+    </item>
 
     <item android:title="More">
         <menu>

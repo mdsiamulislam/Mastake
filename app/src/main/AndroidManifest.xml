@@ -15,6 +15,26 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />
+            <data android:mimeType="text/plain" />
+        </intent>
+    </queries>
 
     <application
         android:name=".App"
@@ -50,6 +70,31 @@
         <activity
             android:name=".activities.MainActivity"
             android:exported="false" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <activity
+            android:name=".activities.ImageToTextActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Mastaka" />
+
+        <activity
+            android:name=".activities.ShakeSyncActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Mastaka" />
+
+        <activity
+            android:name=".activities.ActionsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Mastaka" />
 
         <service
             android:name=".services.BleService"

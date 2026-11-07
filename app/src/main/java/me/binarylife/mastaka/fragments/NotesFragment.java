@@ -79,6 +79,8 @@ public class NotesFragment extends Fragment {
                 intent.putExtra("note_title", note.getTitle());
                 intent.putExtra("note_content", note.getDescription());
                 intent.putExtra("is_ai", note.isAiSupported());
+                intent.putExtra("note_created_at", note.getCreatedAt());
+                intent.putExtra("note_version", note.getVersion());
                 startActivity(intent);
             }
 
