@@ -8,12 +8,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
@@ -120,9 +122,23 @@ public class IotActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (hasBlePermissions() && bluetoothAdapter != null && bluetoothAdapter.isEnabled() && isLocationServiceOn()) {
+            if (bound && bleService != null) {
+                BleService.BleState state = bleService.getCurrentState();
+                if (state == BleService.BleState.BLUETOOTH_OFF || state == BleService.BleState.LOCATION_OFF || state == BleService.BleState.PERMISSION_MISSING || state == BleService.BleState.DISCONNECTED) {
+                    bleService.startConnect();
+                }
+            }
+        }
+    }
+
     private void observeBleService() {
         BleService.connectionStateLiveData.observe(this, state -> {
             updateConnectionUI(state);
+            handleEnvironmentalState(state);
         });
 
         BleService.isSendingLiveData.observe(this, isSending -> {
@@ -140,6 +156,105 @@ public class IotActivity extends AppCompatActivity {
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void handleEnvironmentalState(BleService.BleState state) {
+        if (state == BleService.BleState.BLUETOOTH_OFF) {
+            showBluetoothOffDialog();
+        } else if (state == BleService.BleState.LOCATION_OFF) {
+            showLocationOffDialog();
+        } else if (state == BleService.BleState.PERMISSION_MISSING) {
+            showPermissionMissingDialog();
+        } else if (state == BleService.BleState.READY) {
+            checkBatteryOptimizationAndXiaomi();
+        }
+    }
+
+    private void showBluetoothOffDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Bluetooth বন্ধ আছে")
+                .setMessage("IoT ডিভাইসের সাথে কানেক্ট করার জন্য Bluetooth অন করতে হবে।")
+                .setPositiveButton("Turn on", (d, w) -> {
+                    try {
+                        startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_ENABLE_BLUETOOTH);
+                    } catch (SecurityException ignored) {}
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showLocationOffDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Location বন্ধ আছে")
+                .setMessage("BLE স্ক্যান করার জন্য Location অন থাকা বাধ্যতামূলক।")
+                .setPositiveButton("Turn on", (d, w) -> askToEnableLocation())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showPermissionMissingDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Permission দরকার")
+                .setMessage("Bluetooth, Notification ও Location permission দিতে হবে।")
+                .setPositiveButton("Grant", (d, w) -> checkPermissionsAndConnect())
+                .setNegativeButton("Settings", (d, w) -> {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    intent.setData(Uri.fromParts("package", getPackageName(), null));
+                    startActivity(intent);
+                })
+                .show();
+    }
+
+    private void checkBatteryOptimizationAndXiaomi() {
+        SharedPreferences prefs = getSharedPreferences("BlePrefs", MODE_PRIVATE);
+        boolean batteryPromptShown = prefs.getBoolean("battery_prompt_shown", false);
+
+        if (!batteryPromptShown) {
+            prefs.edit().putBoolean("battery_prompt_shown", true).apply();
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+                    new AlertDialog.Builder(this)
+                            .setTitle("Battery Optimization")
+                            .setMessage("ব্যাকগ্রাউন্ডে নিরবচ্ছিন্ন সংযোগের জন্য অনুগ্রহ করে Battery Optimization বন্ধ রাখুন।")
+                            .setPositiveButton("Settings", (d, w) -> {
+                                try {
+                                    Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                                    intent.setData(Uri.parse("package:" + getPackageName()));
+                                    startActivity(intent);
+                                } catch (Exception ignored) {}
+                            })
+                            .setNegativeButton("Later", null)
+                            .show();
+                }
+            }
+
+            if ("xiaomi".equalsIgnoreCase(Build.MANUFACTURER)) {
+                new AlertDialog.Builder(this)
+                        .setTitle("MIUI Autostart")
+                        .setMessage("Xiaomi ডিভাইসে ব্যাকগ্রাউন্ড সার্ভিস ঠিকমতো চলার জন্য Autostart এলাউ করুন।")
+                        .setPositiveButton("Autostart Settings", (d, w) -> {
+                            boolean launched = false;
+                            try {
+                                Intent intent = new Intent();
+                                intent.setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"));
+                                startActivity(intent);
+                                launched = true;
+                            } catch (Exception ignored) {}
+
+                            if (!launched) {
+                                try {
+                                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                    intent.setData(Uri.fromParts("package", getPackageName(), null));
+                                    startActivity(intent);
+                                } catch (Exception ignored2) {}
+                            }
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            }
+        }
     }
 
     private void updateConnectionUI(BleService.BleState state) {
@@ -160,8 +275,9 @@ public class IotActivity extends AppCompatActivity {
                     binding.btnSync.setAlpha(0.5f);
                     break;
                 case CONNECTING:
+                case RECONNECTING:
                     binding.viewStatusIndicator.setBackgroundResource(R.drawable.sync_dot_pending);
-                    binding.tvConnectionStatus.setText("Connecting...");
+                    binding.tvConnectionStatus.setText(state == BleService.BleState.RECONNECTING ? "Reconnecting..." : "Connecting...");
                     binding.btnConnect.setText("Connecting...");
                     binding.btnSync.setEnabled(false);
                     binding.btnSync.setAlpha(0.5f);
@@ -170,6 +286,27 @@ public class IotActivity extends AppCompatActivity {
                     binding.viewStatusIndicator.setBackgroundResource(R.drawable.sync_dot_pending);
                     binding.tvConnectionStatus.setText("Scanning...");
                     binding.btnConnect.setText("Cancel Scan");
+                    binding.btnSync.setEnabled(false);
+                    binding.btnSync.setAlpha(0.5f);
+                    break;
+                case BLUETOOTH_OFF:
+                    binding.viewStatusIndicator.setBackgroundResource(R.drawable.sync_dot_disconnected);
+                    binding.tvConnectionStatus.setText("Bluetooth is off");
+                    binding.btnConnect.setText("Turn on BT");
+                    binding.btnSync.setEnabled(false);
+                    binding.btnSync.setAlpha(0.5f);
+                    break;
+                case LOCATION_OFF:
+                    binding.viewStatusIndicator.setBackgroundResource(R.drawable.sync_dot_disconnected);
+                    binding.tvConnectionStatus.setText("Location is off");
+                    binding.btnConnect.setText("Turn on Location");
+                    binding.btnSync.setEnabled(false);
+                    binding.btnSync.setAlpha(0.5f);
+                    break;
+                case PERMISSION_MISSING:
+                    binding.viewStatusIndicator.setBackgroundResource(R.drawable.sync_dot_disconnected);
+                    binding.tvConnectionStatus.setText("Permission needed");
+                    binding.btnConnect.setText("Grant Permission");
                     binding.btnSync.setEnabled(false);
                     binding.btnSync.setAlpha(0.5f);
                     break;
@@ -184,10 +321,6 @@ public class IotActivity extends AppCompatActivity {
             }
         });
     }
-
-    // ===============================
-    // PERMISSIONS & CHECKS
-    // ===============================
 
     private String[] getRequiredPermissions() {
         List<String> list = new ArrayList<>();
@@ -217,7 +350,7 @@ public class IotActivity extends AppCompatActivity {
 
     private boolean isLocationServiceOn() {
         LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (lm == null) return false;
+        if (lm == null) return true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             return lm.isLocationEnabled();
         }
@@ -257,19 +390,6 @@ public class IotActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void openAppSettingsDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Permission দরকার")
-                .setMessage("Bluetooth, Notification ও Location permission দিতে হবে। Settings থেকে Allow করুন।")
-                .setPositiveButton("Settings", (d, w) -> {
-                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                    intent.setData(Uri.fromParts("package", getPackageName(), null));
-                    startActivity(intent);
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
     private void checkPermissionsAndConnect() {
         if (!hasBlePermissions()) {
             requestBlePermissions();
@@ -290,9 +410,13 @@ public class IotActivity extends AppCompatActivity {
             return;
         }
 
-        // Start Foreground Service and connect
         Intent serviceIntent = new Intent(this, BleService.class);
-        ContextCompat.startForegroundService(this, serviceIntent);
+        try {
+            ContextCompat.startForegroundService(this, serviceIntent);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to start foreground service", e);
+        }
+
         if (!bound) {
             bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
         }
@@ -322,18 +446,16 @@ public class IotActivity extends AppCompatActivity {
             if (granted) {
                 checkPermissionsAndConnect();
             } else {
-                boolean permanentlyDenied = false;
-                for (String p : permissions) {
-                    if (ActivityCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED &&
-                            !ActivityCompat.shouldShowRequestPermissionRationale(this, p)) {
-                        permanentlyDenied = true;
-                    }
-                }
-                if (permanentlyDenied) {
-                    openAppSettingsDialog();
-                } else {
-                    Toast.makeText(this, "Permissions required!", Toast.LENGTH_SHORT).show();
-                }
+                new AlertDialog.Builder(this)
+                        .setTitle("Permission দরকার")
+                        .setMessage("Settings থেকে অনুমতি প্রদান করুন।")
+                        .setPositiveButton("Settings", (d, w) -> {
+                            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                            intent.setData(Uri.fromParts("package", getPackageName(), null));
+                            startActivity(intent);
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
             }
         }
     }
