@@ -78,6 +78,12 @@ dependencies {
     // WorkManager
     implementation("androidx.work:work-runtime:2.9.1")
 
+    //gjson
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // location
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
