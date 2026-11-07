@@ -14,6 +14,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Mastaka">
         <activity
+            android:name=".activities.IotActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Mastaka" />
+        <activity
             android:name=".activities.NoteCreateActivity"
             android:exported="false"
             android:theme="@style/Theme.Mastaka" />
@@ -33,7 +37,6 @@
             android:name=".activities.MainActivity"
             android:exported="false" />
 
-
         <receiver
             android:name=".widget.MyWidgetProvider"
             android:exported="true">
@@ -45,8 +48,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/my_widget_info" />
         </receiver>
-
-
     </application>
 
 </manifest>

@@ -96,9 +96,7 @@ public class MainActivity extends AppCompatActivity {
 
             } else if (id == R.id.nav_iot) {
 
-                Toast.makeText(this,
-                        "IoT Devices coming soon!",
-                        Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, IotActivity.class));
 
             } else if (id == R.id.nav_about) {
 
