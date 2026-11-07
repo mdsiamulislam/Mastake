@@ -1,11 +1,10 @@
-
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:gravity="center"
-    android:background="#536DFE"
+    android:background="?attr/colorPrimary"
     android:id="@+id/widgetRoot"
     android:padding="14dp">
 
@@ -16,7 +15,7 @@
         android:gravity="center"
         android:text="✎"
         android:textSize="30sp"
-        android:textColor="#FFFFFF" />
+        android:textColor="?attr/colorOnPrimary" />
 
     <!-- App Name -->
     <LinearLayout
@@ -31,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:text="Mastake"
-            android:textColor="#FFFFFF"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -41,7 +40,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="3dp"
             android:text="Capture your thoughts"
-            android:textColor="#172554"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="11sp" />
         </LinearLayout>
 

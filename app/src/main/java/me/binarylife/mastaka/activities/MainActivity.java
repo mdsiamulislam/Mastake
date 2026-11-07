@@ -23,6 +23,7 @@ import me.binarylife.mastaka.fragments.NotesFragment;
 import me.binarylife.mastaka.repository.NoteRepository;
 import me.binarylife.mastaka.R;
 import me.binarylife.mastaka.utils.IoTBackgroundSyncHelper;
+import me.binarylife.mastaka.utils.ThemeManager;
 import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,8 +39,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Status Bar Color
-        getWindow().setStatusBarColor(getResources().getColor(R.color.white, null));
+        //dynamic Status Bar Color
+        getWindow().setStatusBarColor(getResources().getColor(R.color.secondaryContainer, getTheme()));
 
         // Initialize Views
         drawerLayout = findViewById(R.id.drawerLayout);
@@ -102,11 +103,18 @@ public class MainActivity extends AppCompatActivity {
 
                 startActivity(new Intent(MainActivity.this, IotActivity.class));
 
+            } else if (id == R.id.nav_theme) {
+
+                showThemeDialog();
+
             } else if (id == R.id.nav_about) {
 
-                Toast.makeText(this,
-                        "Mastake - Smart Note Taking App",
-                        Toast.LENGTH_SHORT).show();
+                // Show About Dialog
+                new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                        .setTitle("About Mastaka")
+                        .setMessage("Mastaka is a note-taking app with AI assistance and IoT integration.\n\nVersion: 1.0.0\n\nDeveloped by BinaryLife.")
+                        .setPositiveButton("OK", null)
+                        .show();
 
             } else if (id == R.id.nav_logout) {
 
@@ -129,6 +137,23 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
 
         });
+    }
+
+    private void showThemeDialog() {
+        String[] themes = new String[]{"Light", "Dark", "System default"};
+        int currentMode = ThemeManager.getSavedMode(this);
+        int selectedIndex = currentMode;
+        if (selectedIndex < 0 || selectedIndex > 2) selectedIndex = 2;
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("Choose Theme")
+                .setSingleChoiceItems(themes, selectedIndex, (dialog, which) -> {
+                    ThemeManager.saveMode(this, which);
+                    dialog.dismiss();
+                    recreate();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     // Toolbar Menu

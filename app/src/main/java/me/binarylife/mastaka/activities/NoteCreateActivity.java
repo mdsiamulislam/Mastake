@@ -1,8 +1,10 @@
 package me.binarylife.mastaka.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -11,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -37,13 +40,17 @@ public class NoteCreateActivity extends AppCompatActivity {
     private EditText etNoteTitle, etNoteContent;
     private MaterialButton btnSaveNote;
     private MaterialToolbar noteToolbar;
-    private ProgressBar progressBar;
+    private ProgressBar progressBar;          // এখন LinearProgressIndicator, এটা ProgressBar-এরই subclass
     private MaterialCheckBox checkboxAiSupport;
+    private MaterialCardView cardAiSupport;
 
     private NoteRepository noteRepository;
     private String existingNoteId = null;
     private long existingCreatedAt = 0;
     private long existingVersion = 1;
+
+    private String saveLabel = "Save Note";
+    private boolean isSaving = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,11 +63,15 @@ public class NoteCreateActivity extends AppCompatActivity {
         btnSaveNote = findViewById(R.id.btnSaveNote);
         progressBar = findViewById(R.id.progressBar);
         checkboxAiSupport = findViewById(R.id.checkboxAiSupport);
+        cardAiSupport = findViewById(R.id.cardAiSupport);
 
         noteRepository = new NoteRepository(this);
 
         // Back Button
         noteToolbar.setNavigationOnClickListener(v -> finish());
+
+        // পুরো card চাপলে checkbox toggle হবে
+        cardAiSupport.setOnClickListener(v -> checkboxAiSupport.toggle());
 
         // Check if editing existing note
         Intent intent = getIntent();
@@ -70,14 +81,23 @@ public class NoteCreateActivity extends AppCompatActivity {
             String content = intent.getStringExtra("note_content");
             boolean isAi = intent.getBooleanExtra("is_ai", false);
 
+            // আগে এগুলো কখনো সেট হতো না। Adapter থেকে পাঠালে এখানে পাওয়া যাবে
+            existingCreatedAt = intent.getLongExtra("note_created_at", 0);
+            existingVersion = intent.getLongExtra("note_version", 1);
+
             etNoteTitle.setText(title);
             etNoteContent.setText(content);
             checkboxAiSupport.setChecked(isAi);
             noteToolbar.setTitle("Edit Note");
+
+            saveLabel = "Update Note";
+            btnSaveNote.setText(saveLabel);
         }
 
         // Save Button Click
         btnSaveNote.setOnClickListener(v -> {
+            if (isSaving) return;
+
             String title = etNoteTitle.getText().toString().trim();
             String content = etNoteContent.getText().toString().trim();
 
@@ -93,16 +113,18 @@ public class NoteCreateActivity extends AppCompatActivity {
                 return;
             }
 
+            hideKeyboard();
+
             if (checkboxAiSupport.isChecked()) {
                 processNoteWithAi(title, content);
             } else {
-                saveNoteLocally(title, content, checkboxAiSupport.isChecked());
+                saveNoteLocally(title, content, false);
             }
         });
     }
 
     private void processNoteWithAi(String rawTitle, String rawContent) {
-        setLoading(true);
+        setLoading(true, "AI is writing…");
         Toast.makeText(this, "AI নোট গুছিয়ে দিচ্ছে...", Toast.LENGTH_SHORT).show();
 
         String apiKey = "YOUR_API_KEY";
@@ -189,19 +211,24 @@ public class NoteCreateActivity extends AppCompatActivity {
                     }
 
                     String finalOrganizedNote = organizedNote;
-                    runOnUiThread(() -> saveNoteLocally(rawTitle, finalOrganizedNote, true));
+                    runOnUiThread(() -> {
+                        if (isFinishing()) return;
+                        saveNoteLocally(rawTitle, finalOrganizedNote, true);
+                    });
 
                 } else {
-                    // Fallback to saving without AI if API fails/offline
+                    // API fail হলে AI ছাড়াই save
                     runOnUiThread(() -> {
-                        Toast.makeText(this, "AI unavailable (Offline). Saving original note.", Toast.LENGTH_LONG).show();
+                        if (isFinishing()) return;
+                        Toast.makeText(this, "AI unavailable. Saving original note.", Toast.LENGTH_LONG).show();
                         saveNoteLocally(rawTitle, rawContent, false);
                     });
                 }
 
             } catch (Exception e) {
-                // Fallback to saving without AI if offline or exception
+                // Offline বা exception হলে AI ছাড়াই save
                 runOnUiThread(() -> {
+                    if (isFinishing()) return;
                     Toast.makeText(this, "Offline mode: Saving original note without AI.", Toast.LENGTH_SHORT).show();
                     saveNoteLocally(rawTitle, rawContent, false);
                 });
@@ -216,7 +243,7 @@ public class NoteCreateActivity extends AppCompatActivity {
     private void saveNoteLocally(String title, String content, boolean isAiSupported) {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) {
-            setLoading(false);
+            setLoading(false, null);
             Toast.makeText(this, "User not authenticated. Please login.", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, AuthActivity.class));
             finish();
@@ -242,21 +269,36 @@ public class NoteCreateActivity extends AppCompatActivity {
 
         noteRepository.insertOrUpdateNote(note, isNew);
 
-        // Auto try to send notes data to IoT device in background when adding/saving a note
+        // Note save হলে background-এ IoT device-এ পাঠানোর চেষ্টা
         IoTBackgroundSyncHelper.syncToIoT(this);
 
-        setLoading(false);
+        setLoading(false, null);
         Toast.makeText(this, "Note saved locally & queued for sync", Toast.LENGTH_SHORT).show();
         finish();
     }
 
-    private void setLoading(boolean isLoading) {
-        if (isLoading) {
-            btnSaveNote.setVisibility(View.INVISIBLE);
-            progressBar.setVisibility(View.VISIBLE);
-        } else {
-            btnSaveNote.setVisibility(View.VISIBLE);
-            progressBar.setVisibility(View.INVISIBLE);
+    // Loading: button disable, উপরে পাতলা progress line, input বন্ধ
+    private void setLoading(boolean isLoading, String loadingLabel) {
+        isSaving = isLoading;
+
+        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        btnSaveNote.setEnabled(!isLoading);
+        btnSaveNote.setText(isLoading && loadingLabel != null ? loadingLabel : saveLabel);
+
+        etNoteTitle.setEnabled(!isLoading);
+        etNoteContent.setEnabled(!isLoading);
+        cardAiSupport.setEnabled(!isLoading);
+        checkboxAiSupport.setEnabled(!isLoading);
+    }
+
+    private void hideKeyboard() {
+        View view = getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm =
+                    (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
         }
     }
 }

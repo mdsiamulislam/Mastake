@@ -1,133 +1,177 @@
+
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#F7F8FC">
+    android:background="?attr/colorSurface"
+    android:orientation="vertical">
 
     <!-- Toolbar -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/noteToolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="#FFFFFF"
-        app:navigationIcon="@android:drawable/ic_media_previous"
+        android:background="?attr/colorSurface"
+        app:navigationContentDescription="Back"
+        app:navigationIcon="@drawable/ic_arrow_back"
         app:title="New Note"
-        app:titleTextColor="#172554"
-        app:elevation="0dp" />
+        app:titleTextAppearance="?attr/textAppearanceTitleMedium"
+        app:titleTextColor="?attr/colorOnSurface" />
 
-    <!-- Editor Content -->
+    <!-- Progress (জায়গা নেয় না, toolbar-এর নিচে পাতলা লাইন) -->
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone" />
+
+    <!-- Editor -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingStart="20dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="20dp">
 
-        <LinearLayout
+        <!-- AI Support card (compact) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardAiSupport"
+            style="@style/Widget.Material3.CardView.Outlined"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:clickable="true"
+            android:focusable="true"
+            app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+            app:cardCornerRadius="14dp"
+            app:cardElevation="0dp"
+            app:strokeColor="?attr/colorOutlineVariant"
+            app:strokeWidth="1dp">
 
-            <!-- Checkbox -->
-            <com.google.android.material.checkbox.MaterialCheckBox
-                android:id="@+id/checkboxAiSupport"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="AI Writing Support"
-                android:textColor="#333333"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:checked="false" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="14dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="6dp"
+                android:paddingBottom="8dp">
 
-            <!-- Description Text (চেকবক্সের সাথে সামঞ্জস্য রেখে একটু মার্জিন দেওয়া হয়েছে) -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="32dp"
-                android:text="Just explain your idea and let AI help you write it."
-                android:textColor="#929BAD"
-                android:textSize="11sp" />
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_ai"
+                    app:tint="?attr/colorPrimary" />
 
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="AI Writing Support"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Explain your idea and let AI write it."
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="11sp" />
+                </LinearLayout>
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/checkboxAiSupport"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    android:contentDescription="AI Writing Support"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Note Title -->
         <EditText
             android:id="@+id/etNoteTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="20dp"
             android:background="@null"
-            android:hint="Note title"
-            android:textColor="#172554"
-            android:textColorHint="#AAB1C0"
-            android:textSize="26sp"
-            android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
+            android:hint="Title"
+            android:importantForAutofill="no"
             android:inputType="textCapSentences"
             android:maxLines="2"
-            android:padding="0dp" />
+            android:padding="0dp"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOutline"
+            android:textSize="26sp"
+            android:textStyle="bold" />
 
-        <!-- Divider -->
+        <!-- Divider (ছোট, বাম দিকে) -->
         <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="20dp"
-            android:background="#E5E9F2" />
+            android:layout_width="48dp"
+            android:layout_height="3dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_title_accent" />
 
-        <!-- Note Description -->
+        <!-- Note Content -->
         <EditText
             android:id="@+id/etNoteContent"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:layout_marginTop="16dp"
             android:layout_weight="1"
-            android:layout_marginTop="20dp"
             android:background="@null"
-            android:hint="Start writing your thoughts..."
-            android:textColor="#38445A"
-            android:textColorHint="#AAB1C0"
-            android:textSize="16sp"
-            android:gravity="top|start"
             android:fontFamily="sans-serif"
+            android:gravity="top|start"
+            android:hint="Start writing your thoughts…"
+            android:importantForAutofill="no"
             android:inputType="textMultiLine|textCapSentences"
-            android:padding="0dp"
             android:lineSpacingExtra="6dp"
-            android:overScrollMode="ifContentScrolls" />
-
+            android:overScrollMode="ifContentScrolls"
+            android:padding="0dp"
+            android:textColor="?attr/colorOnSurface"
+            android:textColorHint="?attr/colorOutline"
+            android:textSize="16sp" />
     </LinearLayout>
 
-    <!-- Bottom Action Area -->
-    <LinearLayout
+    <!-- Bottom action bar -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?attr/colorOutlineVariant" />
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#FFFFFF"
-        android:padding="20dp">
+        android:background="?attr/colorSurface"
+        android:padding="16dp">
 
-        <!-- Save Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSaveNote"
+            style="@style/Widget.Material3.Button"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
+            android:layout_height="52dp"
             android:text="Save Note"
             android:textSize="15sp"
             android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            app:backgroundTint="#536DFE"
             app:cornerRadius="14dp"
-            app:iconTint="#FFFFFF"
-            app:iconGravity="textStart" />
-
-        <!-- Progess Indicator -->
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone"
-            style="?android:attr/progressBarStyleSmall" />
-
-    </LinearLayout>
+            app:icon="@drawable/ic_check"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp" />
+    </FrameLayout>
 
 </LinearLayout>
